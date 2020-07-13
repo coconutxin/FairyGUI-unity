@@ -163,7 +163,15 @@ namespace FairyGUI
                 GameObject gameObject = new GameObject("[FairyGUI.TweenManager]");
                 gameObject.hideFlags = HideFlags.HideInHierarchy;
                 gameObject.SetActive(true);
-                Object.DontDestroyOnLoad(gameObject);
+                //Object.DontDestroyOnLoad(gameObject);
+                DontDestroyOnLoadManager.DontDestroyOnLoad(gameObject, 2, () => 
+                    {
+                        _inited = false;
+                        _activeTweens = new GTweener[30];
+                        _tweenerPool.Clear();
+                        _totalActiveTweens = 0;
+                    }
+                ); //重启流程
 
                 gameObject.AddComponent<TweenEngine>();
             }

@@ -50,6 +50,7 @@ namespace FairyGUI
         List<DisplayObject> _focusInChain;
         List<Container> _focusHistory;
         Container _nextFocus;
+        public bool EnableInput = true;
         class CursorDef
         {
             public Texture2D texture;
@@ -202,7 +203,8 @@ namespace FairyGUI
             this.gameObject.AddComponent<StageEngine>();
             this.gameObject.AddComponent<UIContentScaler>();
             this.gameObject.SetActive(true);
-            UnityEngine.Object.DontDestroyOnLoad(this.gameObject);
+            //UnityEngine.Object.DontDestroyOnLoad(this.gameObject);
+            DontDestroyOnLoadManager.DontDestroyOnLoad(this.gameObject, 2, () => { _inst = null; }); //重启流程
 
             EnableSound();
 
@@ -903,6 +905,11 @@ namespace FairyGUI
 
         void HandleEvents()
         {
+            if (!EnableInput)
+            {
+                return;
+            }
+
             GetHitTarget();
 
             UpdateTouchPosition();

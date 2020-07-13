@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using FairyGUI.Utils;
+using SLua;
 #if FAIRYGUI_TOLUA
 using LuaInterface;
 #endif
@@ -1564,6 +1565,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
             CallLua("ctor");
 #endif
+            CallSLua("ctor");
         }
 
         virtual protected void ConstructExtension(ByteBuffer buffer)
@@ -1664,5 +1666,59 @@ namespace FairyGUI
             return false;
         }
 #endif
+
+        //slua modify
+        private HashSet<string> calling = new HashSet<string>();
+        public bool CallSLua(string funcName)
+        {
+            object ret = null;
+            return CallSLua(funcName, out ret);
+        }
+
+        public bool CallSLua(string funcName, out object ret)
+        {
+            if (LuaSvr.mainState == null || calling.Contains(funcName))
+            {
+                ret = null;
+                return false;
+            }
+            calling.Add(funcName);
+            
+            IntPtr L = LuaSvr.mainState.L;
+            int oldTop = LuaDLL.lua_gettop(L);
+
+            LuaDLL.lua_getglobal(L, "inherit_override_fun_map"); //..., override_fun_map
+            LuaObject.pushObject(L, this); //..., override_fun_map, this
+            LuaDLL.lua_rawget(L, -2); //..., override_fun_map, class
+
+            LuaTable tab;
+            LuaObject.checkType(L, -1, out tab);
+            if (tab != null)
+            {
+                LuaDLL.lua_settop(L, oldTop); //...
+                LuaDLL.lua_getglobal(L, "inherit_map"); //..., inherit_map
+                LuaObject.pushObject(L, this); //..., inherit_map, this
+                LuaDLL.lua_rawget(L, -2); //..., inherit_map, inst
+
+                LuaTable arg;
+                LuaObject.checkType(L, -1, out arg);
+                if (arg != null)
+                {
+                    LuaFunction fun = (LuaFunction)tab[funcName];
+                    if (fun != null)
+                    {
+                        ret = fun.call(arg);
+                        LuaDLL.lua_settop(L, oldTop); //...
+                        calling.Remove(funcName);
+                        return true;
+                    }
+                }
+            }
+
+            LuaDLL.lua_settop(L, oldTop); //...
+            calling.Remove(funcName);
+            ret = null;
+            return false;
+        }
     }
 }

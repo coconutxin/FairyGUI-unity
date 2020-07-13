@@ -570,6 +570,11 @@ namespace FairyGUI
                 ScrollToView(index);
 
             _lastSelectedIndex = index;
+            AddSelectionInner(index);
+        }
+
+        public void AddSelectionInner(int index)
+        {
             GButton obj = null;
             if (_virtual)
             {
@@ -596,7 +601,11 @@ namespace FairyGUI
         {
             if (selectionMode == ListSelectionMode.None)
                 return;
+            RemoveSelectionInner(index);
+        }
 
+        public void RemoveSelectionInner(int index)
+        {
             GButton obj = null;
             if (_virtual)
             {

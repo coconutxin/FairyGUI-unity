@@ -173,6 +173,10 @@ namespace FairyGUI
                     case ProgressTitleType.Max:
                         _titleObject.text = "" + Math.Round(_max);
                         break;
+
+                    case ProgressTitleType.FULL:
+                        _titleObject.text = "MAX";
+                        break;
                 }
             }
 

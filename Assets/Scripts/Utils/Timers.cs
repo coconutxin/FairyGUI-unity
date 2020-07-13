@@ -41,7 +41,8 @@ namespace FairyGUI
             gameObject = new GameObject("[FairyGUI.Timers]");
             gameObject.hideFlags = HideFlags.HideInHierarchy;
             gameObject.SetActive(true);
-            Object.DontDestroyOnLoad(gameObject);
+            //Object.DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoadManager.DontDestroyOnLoad(gameObject, 2, () => { _inst = null; }); //重启流程
 
             _engine = gameObject.AddComponent<TimersEngine>();
 

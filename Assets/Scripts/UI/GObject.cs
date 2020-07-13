@@ -148,6 +148,11 @@ namespace FairyGUI
 
         internal static uint _gInstanceCounter;
 
+        public static void onReload()
+        {
+            _gInstanceCounter = 0;
+        }
+
         public GObject()
         {
             _width = 0;

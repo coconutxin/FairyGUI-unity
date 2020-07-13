@@ -87,6 +87,13 @@ namespace FairyGUI
         const int GUTTER_X = 2;
         const int GUTTER_Y = 2;
 
+        public static void onReload()
+        {
+            onCopy = null;
+            onPaste = null;
+            contextMenu = null;
+        }
+
         public InputTextField()
         {
             gameObject.name = "InputTextField";
@@ -145,9 +152,14 @@ namespace FairyGUI
             }
             set
             {
+                string old = _text;
                 _text = value;
                 ClearSelection();
                 UpdateText();
+                if (!old.Equals(_text)) //修改赋值不触发onChanged事件问题
+                {
+                    DispatchEvent("onChanged", null);
+                }
             }
         }
 

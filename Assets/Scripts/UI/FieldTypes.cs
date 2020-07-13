@@ -147,7 +147,8 @@
         Percent,
         ValueAndMax,
         Value,
-        Max
+        Max,
+        FULL,
     }
 
     public enum ButtonMode

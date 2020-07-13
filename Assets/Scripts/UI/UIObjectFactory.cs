@@ -168,7 +168,7 @@ namespace FairyGUI
                     if (loaderCreator != null)
                         return loaderCreator();
                     else
-                        return new GLoader();
+                        return new GLoaderEx();
 
                 case ObjectType.Button:
                     return new GButton();

@@ -64,6 +64,12 @@ namespace FairyGUI
         NTexture _root;
         Dictionary<string, MaterialManager> _materialManagers;
 
+        public static void onReload()
+        {
+            _empty = null;
+            CustomDestroyMethod = null;
+        }
+
         internal static Texture2D CreateEmptyTexture()
         {
             Texture2D emptyTexture = new Texture2D(1, 1, TextureFormat.RGB24, false);

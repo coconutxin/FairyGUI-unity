@@ -15,6 +15,7 @@ namespace FairyGUI
 
         public string id;
         public string name;
+        public string path;
         public int width;
         public int height;
         public string file;

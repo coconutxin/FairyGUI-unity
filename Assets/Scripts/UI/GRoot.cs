@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-
+using SLua;
 namespace FairyGUI
 {
     /// <summary>
@@ -119,9 +119,12 @@ namespace FairyGUI
         /// Display a window.
         /// </summary>
         /// <param name="win"></param>
-        public void ShowWindow(Window win)
+        public void ShowWindow(Window win, int index)
         {
-            AddChild(win);
+            if (index < 0)
+                AddChild(win);
+            else
+                AddChildAt(win, index);
             AdjustModalLayer();
         }
 
@@ -140,6 +143,7 @@ namespace FairyGUI
         ///立刻关闭一个窗口。不会调用Window.Hide方法，Window.OnHide也不会被调用。
         /// </summary>
         /// <param name="win"></param>
+        [DoNotToLua]
         public void HideWindowImmediately(Window win)
         {
             HideWindowImmediately(win, false);
@@ -151,6 +155,7 @@ namespace FairyGUI
         /// </summary>
         /// <param name="win"></param>
         /// <param name="dispose">True to dispose the window.</param>
+        /// [DoNotToLua]
         public void HideWindowImmediately(Window win, bool dispose)
         {
             if (win.parent == this)
@@ -165,6 +170,7 @@ namespace FairyGUI
         /// 将一个窗口提到所有窗口的最前面
         /// </summary>
         /// <param name="win"></param>
+        [DoNotToLua]
         public void BringToFront(Window win)
         {
             int cnt = this.numChildren;
@@ -203,7 +209,7 @@ namespace FairyGUI
                 }
                 _modalWaitPane.SetSize(this.width, this.height);
                 _modalWaitPane.AddRelation(this, RelationType.Size);
-
+                _modalWaitPane.Center();
                 AddChild(_modalWaitPane);
             }
         }

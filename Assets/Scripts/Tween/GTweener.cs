@@ -3,6 +3,7 @@ using UnityEngine;
 #if FAIRYGUI_TOLUA
 using LuaInterface;
 #endif
+using SLua;
 
 namespace FairyGUI
 {
@@ -300,6 +301,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
         [NoToLua]
 #endif
+        [DoNotToLua]
         public GTweener OnUpdate(GTweenCallback callback)
         {
             _onUpdate = callback;
@@ -314,6 +316,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
         [NoToLua]
 #endif
+        [DoNotToLua]
         public GTweener OnStart(GTweenCallback callback)
         {
             _onStart = callback;
@@ -328,6 +331,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
         [NoToLua]
 #endif
+        [DoNotToLua]
         public GTweener OnComplete(GTweenCallback callback)
         {
             _onComplete = callback;

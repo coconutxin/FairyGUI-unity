@@ -1,6 +1,7 @@
 ﻿#if FAIRYGUI_TOLUA
 using LuaInterface;
 #endif
+using SLua;
 
 namespace FairyGUI
 {
@@ -69,6 +70,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
         [NoToLua]
 #endif
+        [DoNotToLua]
         public void Add(EventCallback0 callback)
         {
             _bridge.Add(callback);
@@ -81,6 +83,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
         [NoToLua]
 #endif
+        [DoNotToLua]
         public void Remove(EventCallback0 callback)
         {
             _bridge.Remove(callback);
@@ -104,6 +107,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
         [NoToLua]
 #endif
+        [DoNotToLua]
         public void Set(EventCallback0 callback)
         {
             _bridge.Clear();

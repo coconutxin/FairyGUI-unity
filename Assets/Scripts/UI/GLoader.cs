@@ -15,7 +15,7 @@ namespace FairyGUI
         /// </summary>
         public bool showErrorSign;
 
-        string _url;
+        protected string _url;
         AlignType _align;
         VertAlignType _verticalAlign;
         bool _autoSize;
@@ -610,7 +610,7 @@ namespace FairyGUI
             InvalidateBatchingState();
         }
 
-        private void ClearContent()
+        protected void ClearContent()
         {
             ClearErrorState();
 

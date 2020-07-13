@@ -434,5 +434,11 @@ namespace FairyGUI
             if (str != null)
                 this.text = str;
         }
+
+        //add by coconut
+        public List<TextField.LineInfo> GetLines()
+        {
+            return _textField.lines;
+        }
     }
 }

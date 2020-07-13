@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FairyGUI
@@ -28,7 +29,7 @@ namespace FairyGUI
         GObject _dragArea;
         GObject _contentArea;
         bool _modal;
-
+        int _global_index = -1;
         List<IUISource> _uiSources;
         bool _inited;
         bool _loading;
@@ -179,7 +180,9 @@ namespace FairyGUI
         /// </summary>
         public void Show()
         {
-            GRoot.inst.ShowWindow(this);
+            //GRoot.inst.ShowWindow(this);
+            OnGetGlobalIndex();
+            GRoot.inst.ShowWindow(this, _global_index);
         }
 
         /// <summary>
@@ -188,7 +191,9 @@ namespace FairyGUI
         /// <param name="r"></param>
         public void ShowOn(GRoot r)
         {
-            r.ShowWindow(this);
+            //r.ShowWindow(this);
+            OnGetGlobalIndex();
+            r.ShowWindow(this, _global_index);
         }
 
         /// <summary>
@@ -389,6 +394,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
             CallLua("OnInit");
 #endif
+            CallSLua("OnInit");
         }
 
         /// <summary>
@@ -399,6 +405,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
             CallLua("OnShown");
 #endif
+            CallSLua("OnShown");
         }
 
         /// <summary>
@@ -409,6 +416,7 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
             CallLua("OnHide");
 #endif
+            CallSLua("OnHide");
         }
 
         /// <summary>
@@ -420,7 +428,12 @@ namespace FairyGUI
             if (!CallLua("DoShowAnimation"))
                 OnShown();
 #else
-            OnShown();
+            object ret = null;
+            CallSLua("DoShowAnimation", out ret);
+            if (ret == null || !Convert.ToBoolean(ret))
+            {
+                OnShown();
+            }
 #endif
         }
 
@@ -433,7 +446,28 @@ namespace FairyGUI
             if (!CallLua("DoHideAnimation"))
                 HideImmediately();
 #else
-            HideImmediately();
+            object ret = null;
+            CallSLua("DoHideAnimation", out ret);
+            if (ret == null || !Convert.ToBoolean(ret))
+            {
+                HideImmediately();
+            }
+#endif
+        }
+
+        virtual protected void OnGetGlobalIndex()
+        {
+#if FAIRYGUI_TOLUA
+            //魔改流程
+#else
+            object ret = null;
+            if (CallSLua("OnGetGlobalIndex", out ret))
+            {
+                if (ret != null)
+                    _global_index = Convert.ToInt32(ret);
+                else
+                    _global_index = -1;
+            }
 #endif
         }
 

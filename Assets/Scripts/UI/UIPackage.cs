@@ -60,6 +60,8 @@ namespace FairyGUI
         List<PackageItem> _items;
         Dictionary<string, PackageItem> _itemsById;
         Dictionary<string, PackageItem> _itemsByName;
+        Dictionary<string, PackageItem> _itemsPathByName;
+        Dictionary<string, PackageItem> _itemsByFile;
         Dictionary<string, string>[] _dependencies;
         string _assetPath;
         string[] _branches;
@@ -109,6 +111,8 @@ namespace FairyGUI
             _items = new List<PackageItem>();
             _itemsById = new Dictionary<string, PackageItem>();
             _itemsByName = new Dictionary<string, PackageItem>();
+            _itemsPathByName = new Dictionary<string, PackageItem>();
+            _itemsByFile = new Dictionary<string, PackageItem>();
             _sprites = new Dictionary<string, AtlasSprite>();
 
             _branchIndex = -1;
@@ -378,10 +382,11 @@ namespace FairyGUI
         public static void RemovePackage(string packageIdOrName)
         {
             UIPackage pkg = null;
-            if (!_packageInstById.TryGetValue(packageIdOrName, out pkg))
+            if (!_packageInstById.TryGetValue(packageIdOrName, out pkg) && !StageEngine.beingQuit)
             {
                 if (!_packageInstByName.TryGetValue(packageIdOrName, out pkg))
                     throw new Exception("FairyGUI: '" + packageIdOrName + "' is not a valid package id or name.");
+                if (StageEngine.beingQuit) return;
             }
             pkg.Dispose();
             _packageInstById.Remove(pkg.id);
@@ -541,7 +546,7 @@ namespace FairyGUI
                 return null;
 
             PackageItem pi;
-            if (!pkg._itemsByName.TryGetValue(resName, out pi))
+            if (!pkg.TryGetResValue(resName, out pi))
                 return null;
 
             return URL_PREFIX + pkg.id + pi.id;
@@ -580,7 +585,7 @@ namespace FairyGUI
                     return pkg.GetItemByName(srcName);
                 }
             }
-
+            Debug.LogError(String.Format("加载包失败，请检查依赖包是否填写正确(ui_depend_package_list) url：{0}", url));
             return null;
         }
 
@@ -773,7 +778,7 @@ namespace FairyGUI
                 pi.type = (PackageItemType)buffer.ReadByte();
                 pi.id = buffer.ReadS();
                 pi.name = buffer.ReadS();
-                buffer.ReadS(); //path
+                pi.path = buffer.ReadS(); //path
                 pi.file = buffer.ReadS();
                 pi.exported = buffer.ReadBool();
                 pi.width = buffer.ReadInt();
@@ -871,7 +876,15 @@ namespace FairyGUI
                 _items.Add(pi);
                 _itemsById[pi.id] = pi;
                 if (pi.name != null)
+                {
                     _itemsByName[pi.name] = pi;
+                    _itemsPathByName[pi.path + pi.name] = pi;
+                }
+
+                if (pi.file != null)
+                {
+                    _itemsByFile[pi.file.ToLower()] = pi;
+                }
 
                 buffer.position = nextPos;
             }
@@ -991,6 +1004,30 @@ namespace FairyGUI
             }
         }
 
+        public void UnloadPackageItemAsset(string assetPath)
+        {
+            PackageItem pi;
+            if (_itemsByFile.TryGetValue(assetPath.ToLower(), out pi))
+            {
+                if (pi.type == PackageItemType.Atlas)
+                {
+                    if (pi.texture != null)
+                    {
+                        pi.texture.Unload();
+                        pi.texture = null;
+                    }
+                }
+                else if (pi.type == PackageItemType.Sound)
+                {
+                    if (pi.audioClip != null)
+                    {
+                        pi.audioClip.Unload();
+                        pi.audioClip = null;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -1068,7 +1105,7 @@ namespace FairyGUI
         public GObject CreateObject(string resName)
         {
             PackageItem pi;
-            if (!_itemsByName.TryGetValue(resName, out pi))
+            if (!TryGetResValue(resName, out pi))
             {
                 Debug.LogError("FairyGUI: resource not found - " + resName + " in " + this.name);
                 return null;
@@ -1086,7 +1123,7 @@ namespace FairyGUI
         public GObject CreateObject(string resName, System.Type userClass)
         {
             PackageItem pi;
-            if (!_itemsByName.TryGetValue(resName, out pi))
+            if (!TryGetResValue(resName, out pi))
             {
                 Debug.LogError("FairyGUI: resource not found - " + resName + " in " + this.name);
                 return null;
@@ -1098,7 +1135,7 @@ namespace FairyGUI
         public void CreateObjectAsync(string resName, CreateObjectCallback callback)
         {
             PackageItem pi;
-            if (!_itemsByName.TryGetValue(resName, out pi))
+            if (!TryGetResValue(resName, out pi))
             {
                 Debug.LogError("FairyGUI: resource not found - " + resName + " in " + this.name);
                 return;
@@ -1134,7 +1171,7 @@ namespace FairyGUI
         public object GetItemAsset(string resName)
         {
             PackageItem pi;
-            if (!_itemsByName.TryGetValue(resName, out pi))
+            if (!TryGetResValue(resName, out pi))
             {
                 Debug.LogError("FairyGUI: Resource not found - " + resName + " in " + this.name);
                 return null;
@@ -1160,7 +1197,7 @@ namespace FairyGUI
         public PackageItem GetItemByName(string itemName)
         {
             PackageItem pi;
-            if (_itemsByName.TryGetValue(itemName, out pi))
+            if (TryGetResValue(itemName, out pi))
                 return pi;
             else
                 return null;
@@ -1171,30 +1208,23 @@ namespace FairyGUI
             switch (item.type)
             {
                 case PackageItemType.Image:
-                    if (item.texture == null)
-                        LoadImage(item);
+                    LoadImage(item);
                     return item.texture;
 
                 case PackageItemType.Atlas:
-                    if (item.texture == null)
-                        LoadAtlas(item);
+                    LoadAtlas(item);
                     return item.texture;
 
                 case PackageItemType.Sound:
-                    if (item.audioClip == null)
-                        LoadSound(item);
+                    LoadSound(item);
                     return item.audioClip;
 
                 case PackageItemType.Font:
-                    if (item.bitmapFont == null)
-                        LoadFont(item);
-
+                    LoadFont(item);
                     return item.bitmapFont;
 
                 case PackageItemType.MovieClip:
-                    if (item.frames == null)
-                        LoadMovieClip(item);
-
+                    LoadMovieClip(item);
                     return item.frames;
 
                 case PackageItemType.Component:
@@ -1258,6 +1288,11 @@ namespace FairyGUI
 
         void LoadAtlas(PackageItem item)
         {
+            if (item.texture != null)
+            {
+                return;
+            }
+
             string ext = Path.GetExtension(item.file);
             string fileName = item.file.Substring(0, item.file.Length - ext.Length);
 
@@ -1328,6 +1363,10 @@ namespace FairyGUI
 
         void LoadImage(PackageItem item)
         {
+            if (item.texture != null && item.texture.root.nativeTexture != null)
+            {
+                return;
+            }
             AtlasSprite sprite;
             if (_sprites.TryGetValue(item.id, out sprite))
             {
@@ -1343,6 +1382,11 @@ namespace FairyGUI
 
         void LoadSound(PackageItem item)
         {
+            if (item.audioClip != null)
+            {
+                return;
+            }
+
             string ext = Path.GetExtension(item.file);
             string fileName = item.file.Substring(0, item.file.Length - ext.Length);
 
@@ -1406,6 +1450,24 @@ namespace FairyGUI
 
         void LoadMovieClip(PackageItem item)
         {
+            if (item.frames != null)
+            {
+                var isLoad = true;
+                for (int i = 0; i < item.frames.Length; i++)
+                {
+                    var frameItem = item.frames[i];
+                    if (frameItem.texture == null || frameItem.texture.nativeTexture == null)
+                    {
+                        isLoad = false;
+                        break;
+                    }
+                }
+                if (isLoad)
+                {
+                    return;
+                }
+            }
+
             ByteBuffer buffer = item.rawData;
 
             buffer.Seek(0, 0);
@@ -1450,6 +1512,10 @@ namespace FairyGUI
 
         void LoadFont(PackageItem item)
         {
+            if (item.bitmapFont != null && item.bitmapFont.mainTexture.nativeTexture != null)
+            {
+                return;
+            }
             BitmapFont font = new BitmapFont();
             font.name = URL_PREFIX + this.id + item.id;
             item.bitmapFont = font;
@@ -1649,6 +1715,42 @@ namespace FairyGUI
 #else
             Debug.LogWarning("To enable DragonBones support, add script define symbol: FAIRYGUI_DRAGONBONES");
 #endif
+        }
+
+        /// <summary>
+        /// add by coconut
+        /// </summary>
+        /// <param name="resName"></param>
+        /// <param name="pi"></param>
+        /// <returns></returns>
+        public bool TryGetResValue(string resName, out PackageItem pi)
+        {
+            if (!_itemsByName.TryGetValue(resName, out pi))
+            {
+                resName = "/" + resName;
+                if (!_itemsPathByName.TryGetValue(resName, out pi))
+                {
+#if COC_RELEASE
+                    Debug.LogError("FairyGUI: Resource not found - " + resName + " in " + this.name);
+#else
+                    throw new Exception("FairyGUI: Resource not found - " + resName + " in " + this.name);
+#endif
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        
+        public PackageItem GetSpriteAtlas(string id)
+        {
+            AtlasSprite sprite;
+            if (_sprites.TryGetValue(id, out sprite))
+            {
+                return sprite.atlas;
+            }
+
+            return null;
         }
     }
 }
