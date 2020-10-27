@@ -36,6 +36,14 @@ namespace FairyGUI
 
         protected int _requestingCmd;
 
+#if FAIRYGUI_PUERTS
+        public Action __onInit;
+        public Action __onShown;
+        public Action __onHide;
+        public Action __doShowAnimation;
+        public Action __doHideAnimation;
+#endif
+
         public Window()
             : base()
         {
@@ -43,8 +51,8 @@ namespace FairyGUI
             this.tabStopChildren = true;
             bringToFontOnClick = UIConfig.bringWindowToFrontOnClick;
 
-            displayObject.onAddedToStage.Add(__onShown);
-            displayObject.onRemovedFromStage.Add(__onHide);
+            displayObject.onAddedToStage.Add(__addedToStage);
+            displayObject.onRemovedFromStage.Add(__removeFromStage);
             displayObject.onTouchBegin.AddCapture(__touchBegin);
 
             this.gameObjectName = "Window";
@@ -394,6 +402,10 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
             CallLua("OnInit");
 #endif
+#if FAIRYGUI_PUERTS
+            if (__onInit != null)
+                __onInit();
+#endif
             CallSLua("OnInit");
         }
 
@@ -404,6 +416,10 @@ namespace FairyGUI
         {
 #if FAIRYGUI_TOLUA
             CallLua("OnShown");
+#endif
+#if FAIRYGUI_PUERTS
+            if (__onShown != null)
+                __onShown();
 #endif
             CallSLua("OnShown");
         }
@@ -416,6 +432,10 @@ namespace FairyGUI
 #if FAIRYGUI_TOLUA
             CallLua("OnHide");
 #endif
+#if FAIRYGUI_PUERTS
+            if (__onHide != null)
+                __onHide();
+#endif
             CallSLua("OnHide");
         }
 
@@ -426,6 +446,11 @@ namespace FairyGUI
         {
 #if FAIRYGUI_TOLUA
             if (!CallLua("DoShowAnimation"))
+                OnShown();
+#elif FAIRYGUI_PUERTS
+            if (__doShowAnimation != null)
+                __doShowAnimation();
+            else
                 OnShown();
 #else
             object ret = null;
@@ -444,6 +469,11 @@ namespace FairyGUI
         {
 #if FAIRYGUI_TOLUA
             if (!CallLua("DoHideAnimation"))
+                HideImmediately();
+#elif FAIRYGUI_PUERTS
+            if (__doHideAnimation != null)
+                __doHideAnimation();
+            else
                 HideImmediately();
 #else
             object ret = null;
@@ -499,6 +529,14 @@ namespace FairyGUI
             if (_modalWaitPane != null && _modalWaitPane.parent == null)
                 _modalWaitPane.Dispose();
 
+#if FAIRYGUI_PUERTS
+            __onInit = null;
+            __onShown = null;
+            __onHide = null;
+            __doShowAnimation = null;
+            __doHideAnimation = null;
+#endif
+
             base.Dispose();
         }
 
@@ -507,7 +545,7 @@ namespace FairyGUI
             Hide();
         }
 
-        void __onShown()
+        void __addedToStage()
         {
             if (!_inited)
                 Init();
@@ -515,7 +553,7 @@ namespace FairyGUI
                 DoShowAnimation();
         }
 
-        void __onHide()
+        void __removeFromStage()
         {
             CloseModalWait();
             OnHide();
