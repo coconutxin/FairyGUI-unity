@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using FairyGUI.Utils;
+using System;
 
 namespace FairyGUI
 {
@@ -249,5 +250,47 @@ namespace FairyGUI
                 buffer.position = curPos + dataLen;
             }
         }
+
+        static Func<string, string> _luaI18nFunc = null;
+        static public Func<string, string> LuaI18nFunc
+        {
+            set
+            {
+                _luaI18nFunc = value;
+            }
+        }
+        static private Dictionary<string, string> _i18nDict = new Dictionary<string, string>();
+
+        static bool TryGetI18nValue(PackageItem item, string key, out string value)
+        {
+            var name = string.Format("{0}-{1}", item.owner.id + item.id, key);
+            if (_i18nDict.ContainsKey(name))
+            {
+                value = _i18nDict[name];
+                return true;
+            }
+
+            if (_luaI18nFunc != null)
+            {
+                var ret = _luaI18nFunc.Invoke(name);
+                if (!string.IsNullOrEmpty(ret))
+                {
+                    value = ret;
+                    _i18nDict[name] = value;
+                    return true;
+                }
+                else
+                {
+                    value = null;
+                    return false;
+                }
+            }
+            else
+            {
+                value = null;
+                return false;
+            }
+        }
+
     }
 }
