@@ -271,11 +271,11 @@ namespace FairyGUI
             }
             set
             {
-                SetFous(value);
+                SetFocus(value);
             }
         }
 
-        public void SetFous(DisplayObject newFocus, bool byKey = false)
+        public void SetFocus(DisplayObject newFocus, bool byKey = false)
         {
             if (newFocus == this)
                 newFocus = null;
@@ -753,12 +753,12 @@ namespace FairyGUI
                     if (_nextFocus.tabStopChildren)
                     {
                         if (_nextFocus._lastFocus != null && _nextFocus.IsAncestorOf(_nextFocus._lastFocus))
-                            SetFous(_nextFocus._lastFocus);
+                            SetFocus(_nextFocus._lastFocus);
                         else
-                            SetFous(_nextFocus);
+                            SetFocus(_nextFocus);
                     }
                     else
-                        SetFous(_nextFocus);
+                        SetFocus(_nextFocus);
                 }
                 _nextFocus = null;
             }
@@ -1002,7 +1002,7 @@ namespace FairyGUI
                     }
 
                     if (_keyboard.done)
-                        SetFous(null);
+                        SetFocus(null);
                 }
             }
             else
@@ -1032,7 +1032,7 @@ namespace FairyGUI
                     _touchCount = 1;
                     touch.Begin();
                     touch.button = 0;
-                    SetFous(touch.target);
+                    SetFocus(touch.target);
 
                     touch.UpdateEvent();
                     touch.target.BubbleEvent("onTouchBegin", touch.evt);
@@ -1074,7 +1074,7 @@ namespace FairyGUI
                     _touchCount = 1;
                     touch.Begin();
                     touch.button = Input.GetMouseButtonDown(2) ? 2 : (Input.GetMouseButtonDown(1) ? 1 : 0);
-                    SetFous(touch.target);
+                    SetFocus(touch.target);
 
                     touch.UpdateEvent();
                     touch.target.BubbleEvent("onTouchBegin", touch.evt);
@@ -1150,7 +1150,7 @@ namespace FairyGUI
                         _touchCount++;
                         touch.Begin();
                         touch.button = 0;
-                        SetFous(touch.target);
+                        SetFocus(touch.target);
 
                         touch.UpdateEvent();
                         touch.target.BubbleEvent("onTouchBegin", touch.evt);

@@ -1022,7 +1022,7 @@ namespace FairyGUI
         public void RequestFocus()
         {
             if (displayObject != null)
-                Stage.inst.SetFous(displayObject, false);
+                Stage.inst.SetFocus(displayObject, false);
         }
 
         /// <summary>
@@ -1031,7 +1031,7 @@ namespace FairyGUI
         public void RequestFocus(bool byKey)
         {
             if (displayObject != null)
-                Stage.inst.SetFous(displayObject, byKey);
+                Stage.inst.SetFocus(displayObject, byKey);
         }
 
         /// <summary>
